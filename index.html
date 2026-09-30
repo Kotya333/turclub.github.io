@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ТЗ: Сайт и мобильное приложение турклуба (v1.0)</title>
+  <style>
+    /* --- CSS ПЕРЕМЕННЫЕ (СВЕТЛАЯ / ТЁМНАЯ ТЕМА) --- */
+    :root[data-theme="light"] {
+      --bg-main: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-sidebar: #ffffff;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+      --table-stripe: #f8fafc;
+      --badge-must-bg: #fee2e2; --badge-must-txt: #991b1b;
+      --badge-should-bg: #fef3c7; --badge-should-txt: #92400e;
+      --badge-could-bg: #e0e7ff; --badge-could-txt: #3730a3;
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    :root[data-theme="dark"] {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-sidebar: #1e293b;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --primary-light: #1e3a8a;
+      --code-bg: #020617;
+      --code-text: #e2e8f0;
+      --table-stripe: #182232;
+      --badge-must-bg: #450a0a; --badge-must-txt: #fca5a5;
+      --badge-should-bg: #451a03; --badge-should-txt: #fde68a;
+      --badge-could-bg: #1e1b4b; --badge-could-txt: #c7d2fe;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- БАЗОВЫЕ СТИЛИ --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    /* --- ШАПКА --- */
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background-color: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.5rem;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: var(--shadow);
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+    .badge-ver { background: var(--primary-light); color: var(--primary); font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 9999px; }
+    .header-controls { display: flex; gap: 0.75rem; align-items: center; }
+
+    .btn {
+      background: var(--bg-main); color: var(--text-main);
+      border: 1px solid var(--border-color); padding: 0.4rem 0.8rem;
+      border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem;
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-active { background: var(--primary); color: #fff !important; border-color: var(--primary); }
+
+    /* --- ЛАЙОУТ --- */
+    .app-container { display: flex; min-height: calc(100vh - 57px); }
+
+    /* Сайдбар / Меню */
+    .sidebar {
+      width: 280px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      position: sticky; top: 57px; height: calc(100vh - 57px);
+      overflow-y: auto; padding: 1rem 0.5rem; flex-shrink: 0;
+    }
+    .search-box { padding: 0 0.5rem 0.75rem 0.5rem; }
+    .search-input {
+      width: 100%; padding: 0.4rem 0.75rem; border-radius: 0.375rem;
+      border: 1px solid var(--border-color); background: var(--bg-main);
+      color: var(--text-main); font-size: 0.85rem;
+    }
+    .nav-list { list-style: none; }
+    .nav-item {
+      display: block; padding: 0.5rem 0.75rem; border-radius: 0.375rem;
+      color: var(--text-muted); text-decoration: none; font-size: 0.875rem;
+      margin-bottom: 0.125rem; cursor: pointer; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-item:hover { background: var(--bg-main); color: var(--text-main); }
+    .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+    /* Контентная область */
+    .content { flex-grow: 1; padding: 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+    .doc-section { display: none; margin-bottom: 2.5rem; background: var(--bg-card); padding: 1.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow); }
+    .doc-section.visible { display: block; }
+    
+    /* Режим сплошного листания */
+    .mode-full .doc-section { display: block !important; }
+
+    /* --- ТИПОГРАФИКА И ЭЛЕМЕНТЫ --- */
+    h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.35rem; margin-top: 1.5rem; margin-bottom: 1rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border-color); color: var(--primary); }
+    h3 { font-size: 1.1rem; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+    p, li { font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.75rem; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    
+    .callout {
+      background: var(--primary-light); border-left: 4px solid var(--primary);
+      padding: 1rem; border-radius: 0 0.375rem 0.375rem 0; margin: 1rem 0; font-size: 0.9rem;
+    }
+
+    /* Таблицы */
+    .table-wrapper { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border-color); border-radius: 0.375rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.875rem; }
+    th, td { padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border-color); }
+    th { background: var(--bg-main); font-weight: 600; color: var(--text-muted); }
+    tr:nth-child(even) { background: var(--table-stripe); }
+
+    /* Бейджи */
+    .badge { display: inline-block; padding: 0.15rem 0.4rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge-must { background: var(--badge-must-bg); color: var(--badge-must-txt); }
+    .badge-should { background: var(--badge-should-bg); color: var(--badge-should-txt); }
+    .badge-could { background: var(--badge-could-bg); color: var(--badge-could-txt); }
+    
+    .method { font-family: monospace; font-weight: bold; padding: 0.1rem 0.3rem; border-radius: 0.2rem; font-size: 0.8rem; }
+    .method-get { background: #dbeafe; color: #1e40af; }
+    .method-post { background: #dcfce7; color: #166534; }
+    .method-patch { background: #fef3c7; color: #92400e; }
+
+    /* Код */
+    pre { background: var(--code-bg); color: var(--code-text); padding: 1rem; border-radius: 0.375rem; overflow-x: auto; font-family: "Courier New", Courier, monospace; font-size: 0.85rem; margin: 1rem 0; }
+    code { font-family: monospace; background: var(--bg-main); padding: 0.1rem 0.3rem; border-radius: 0.2rem; font-size: 0.875rem; border: 1px solid var(--border-color); }
+    pre code { background: transparent; padding: 0; border: none; color: inherit; }
+
+    /* Моб. адаптив */
+    .mobile-menu-btn { display: none; }
+    @media (max-width: 768px) {
+      .header { padding: 0.5rem 1rem; }
+      .header-title { font-size: 0.95rem; }
+      .mobile-menu-btn { display: inline-flex; }
+      .sidebar {
+        display: none; position: fixed; top: 57px; left: 0; right: 0; bottom: 0;
+        width: 100%; height: calc(100vh - 57px); z-index: 40;
+      }
+      .sidebar.open { display: block; }
+      .content { padding: 1rem; }
+      .doc-section { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ШАПКА -->
+  <header class="header">
+    <div style="display: flex; align-items: center; gap: 0.5rem;">
+      <button class="btn mobile-menu-btn" id="mobileMenuBtn">☰</button>
+      <div class="header-title">
+        <span>ТЗ: Турклуб</span>
+        <span class="badge-ver">v1.0</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <!-- Переключатель видов -->
+      <div style="display: flex; background: var(--bg-main); padding: 2px; border-radius: 0.375rem; border: 1px solid var(--border-color);">
+        <button class="btn btn-active" id="btnModeTabs" title="Переключение по разделам">Разделы</button>
+        <button class="btn" id="btnModeFull" title="Листать всё ТЗ целиком">Сплошной</button>
+      </div>
+
+      <!-- Смена темы -->
+      <button class="btn" id="themeToggle" title="Сменить тему">🌙</button>
+    </div>
+  </header>
+
+  <div class="app-container" id="appContainer">
+    <!-- САЙДБАР / НАВИГАЦИЯ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск по разделам...">
+      </div>
+      <ul class="nav-list" id="navList">
+        <!-- Генерируется через JS -->
+      </ul>
+    </aside>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ (ВСЕ 15 РАЗДЕЛОВ) -->
+    <main class="content">
+
+      <!-- МЕТАДАННЫЕ -->
+      <div class="doc-section visible" id="sec-0">
+        <h1>Техническое задание: сайт и мобильное приложение турклуба</h1>
+        <p><strong>Версия:</strong> 1.0 · <strong>Статус:</strong> для оценки и проектирования · <strong>Дата:</strong> 30.09.2026</p>
+        <p><strong>Заказчик:</strong> Турклуб (далее — «Клуб») · <strong>Исполнители:</strong> команда web/mobile-разработки, UX/UI, QA, DevOps, ИБ.</p>
+        <div class="callout">
+          Документ задаёт требования к продукту. Юридические формулировки согласий, сроки хранения, составы выгрузок и порядок передачи данных подлежат финальному согласованию с юристом Клуба, ответственным за обработку ПД и ответственными за МЧС/МКК до запуска в продуктив.
+        </div>
+      </div>
+
+      <!-- 1. ТЕРМИНЫ -->
+      <div class="doc-section" id="sec-1">
+        <h2>1. Термины и сокращения</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Термин</th><th>Определение</th></tr></thead>
+            <tbody>
+              <tr><td>Турклуб / Клуб</td><td>Организатор походов, ПВД и водных маршрутов, оператор продукта и ПД.</td></tr>
+              <tr><td>Маршрут</td><td>Описанный типовой путь с характеристиками, треком, программой и требованиями.</td></tr>
+              <tr><td>Выход / заезд</td><td>Конкретное проведение маршрута в заданные даты, с инструктором и лимитом мест.</td></tr>
+              <tr><td>ПВД</td><td>Поход выходного дня.</td></tr>
+              <tr><td>МКК</td><td>Маршрутно-квалификационная комиссия.</td></tr>
+              <tr><td>МЧС</td><td>Органы/подразделения МЧС, в которые Клуб направляет сведения в установленном порядке.</td></tr>
+              <tr><td>ПД</td><td>Персональные данные.</td></tr>
+              <tr><td>Специальные категории ПД</td><td>В данном проекте — сведения о состоянии здоровья; обрабатываются только при законном основании и отдельном согласии.</td></tr>
+              <tr><td>Трек</td><td>Геопространственная линия маршрута и связанные точки.</td></tr>
+              <tr><td>GPX / KML</td><td>Форматы файлов геоданных для обмена маршрутами.</td></tr>
+              <tr><td>Точка маршрута</td><td>Старт, финиш, стоянка, препятствие, достопримечательность или иная геометка.</td></tr>
+              <tr><td>Ачивка</td><td>Цифровое достижение пользователя, начисляемое по правилам.</td></tr>
+              <tr><td>Сезонная серия</td><td>Последовательность зачтённых маршрутов в заданных сезонах/периодах.</td></tr>
+              <tr><td>Участие</td><td>Связь участника с конкретным выходом и его статусом.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. ЦЕЛИ -->
+      <div class="doc-section" id="sec-2">
+        <h2>2. Цели, границы и аудитория</h2>
+        <h3>2.1. Цели</h3>
+        <ol>
+          <li>Дать посетителю понятный выбор водного, пешего маршрута или ПВД на карте и в каталоге.</li>
+          <li>Автоматизировать заявки, сбор данных участника, согласий и подготовку документов Клуба.</li>
+          <li>Снизить ручную подготовку списков для МЧС, МКК и инструкторов при контролируемом доступе к ПД.</li>
+          <li>Сформировать личную историю активностей, мотивацию к повторным маршрутам и управляемые скидки.</li>
+        </ol>
+        <h3>2.2. Границы</h3>
+        <p><strong>Входит:</strong> публичный сайт, API, административная панель, приложения iOS/Android, каталог/карта, регистрация, личный кабинет, документы, уведомления, выгрузки и базовая геймификация.</p>
+        <p><strong>Не входит в базовый объём:</strong> экстренный мониторинг в реальном времени, медицинская ИС, автоматическая подача сведений в государственные системы без подтверждённого API, бухгалтерия, бронирование транспорта третьих лиц, полноценная социальная сеть. Эти позиции могут быть отдельными интеграционными проектами.</p>
+        <h3>2.3. Целевая аудитория и ключевые сценарии</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Сегмент</th><th>Потребность</th><th>Основной сценарий</th></tr></thead>
+            <tbody>
+              <tr><td>Гость</td><td>Выбрать активность</td><td>Находит маршрут, изучает карту, программу, отзывы, даты.</td></tr>
+              <tr><td>Участник</td><td>Записаться и управлять участием</td><td>Подаёт заявку, заполняет анкету, даёт согласия, получает статус.</td></tr>
+              <tr><td>Постоянный участник</td><td>Видеть прогресс и льготы</td><td>Смотрит историю, километраж, ачивки, скидку.</td></tr>
+              <tr><td>Инструктор / гид</td><td>Вести группу</td><td>Просматривает разрешённый состав, отмечает факт участия и инциденты.</td></tr>
+              <tr><td>Администратор</td><td>Организовать выход</td><td>Создаёт заезд, подтверждает участников, выпускает документы.</td></tr>
+              <tr><td>Ответственный МЧС/МКК</td><td>Подготовить корректные сведения</td><td>Формирует шаблон, проверяет состав, печатает/выгружает документ.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. РОЛИ -->
+      <div class="doc-section" id="sec-3">
+        <h2>3. Роли и доступ</h2>
+        <p>Принцип: минимально необходимый доступ (RBAC); права к ПД дополнительно ограничиваются назначением на выход, целью обработки и журналируются.</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr><th>Действие / роль</th><th>Гость</th><th>Участник</th><th>Инструктор</th><th>Модератор</th><th>Админ</th><th>МЧС/МКК</th><th>Супер-админ</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Смотреть публичный каталог/карту</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Подать и редактировать свою заявку</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+              <tr><td>Смотреть свои документы/согласия</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+              <tr><td>Смотреть состав назначенного выхода</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>✓</td><td>по назначению</td><td>✓</td></tr>
+              <tr><td>Менять статус участия</td><td>—</td><td>отмена*</td><td>✓ (предлож)</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+              <tr><td>Модерировать отзывы/фото</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td></tr>
+              <tr><td>Создавать маршруты/выходы</td><td>—</td><td>—</td><td>по праву</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+              <tr><td>Экспорт МЧС/МКК</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td>Управлять ролями, шаблонами, аудитом</td><td>—</td><td>—</td><td>—</td><td>—</td><td>огранич.</td><td>—</td><td>✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.8rem; color: var(--text-muted);">* Отмена пользователем возможна только до дедлайна.</p>
+      </div>
+
+      <!-- 4. ФУНКЦИОНАЛЬНЫЕ ТРЕБОВАНИЯ -->
+      <div class="doc-section" id="sec-4">
+        <h2>4. Функциональные требования</h2>
+        
+        <h3>4.1. Каталог, поиск и карточка маршрута</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>ID</th><th>Требование</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>FR-CAT-01</td><td>Каталог разделён на водные, пешие и ПВД; поддерживает плитку и список.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-CAT-02</td><td>Фильтры: тип, регион, сложность, сезон, длительность, километраж, возраст, требуемый опыт, даты выходов, наличие мест.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-CAT-03</td><td>Поиск по названию, региону, ключевым словам и тексту описания с подсказками.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-CAT-04</td><td>Карточка показывает описание, нитку, программу по дням, сложность, сезон, дистанцию, набор высоты, требования, снаряжение, питание, цену, фото, карту, отзывы и календарь.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-CAT-05</td><td>Показать доступность: свободно / мест мало / лист ожидания / набор закрыт.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-CAT-06</td><td>Избранное, сравнение до 3 маршрутов, SEO-метаданные и ЧПУ URL.</td><td><span class="badge badge-could">Could</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.2. Карта, треки и медиа</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>ID</th><th>Требование</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>FR-MAP-01</td><td>Интерактивная карта отображает линии треков и точки: старт, финиш, стоянка, препятствие, достопримечательность.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-MAP-02</td><td>Администратор загружает GPX/KML; система валидирует формат, лимит размера, геометрию и показывает предпросмотр.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-MAP-03</td><td>Хранятся исходный файл, нормализованная геометрия, длина, высоты/набор.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-MAP-04</td><td>Слои: базовая карта, спутник, трек, POI, фото; маркеры кластеризуются.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-MAP-05</td><td>Фото с EXIF-координатами может быть привязано к карте; геолокацию можно скрыть до публикации.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-MAP-06</td><td>Для мобильного приложения — сохранение маршрута и карты для офлайн-просмотра.</td><td><span class="badge badge-could">Could</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.3. Выходы, заявки и участие</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>ID</th><th>Требование</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>FR-TRIP-01</td><td>Для маршрута создаются выходы с датами, местом сбора, лимитом, ценой, инструкторами, статусом и правилами отмены.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-TRIP-02</td><td>Участник выбирает выход, создаёт заявку, видит прогресс заполнения и сохраняет черновик.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-TRIP-03</td><td>Статусы: черновик, отправлена, на проверке, требуются сведения, подтверждена, лист ожидания, оплачена, отменена, завершена, неявка.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-TRIP-04</td><td>Администратор подтверждает/отклоняет заявку с причиной, назначает группу и инструктора.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-TRIP-05</td><td>Подача за себя и за других лиц (взрослые/несовершеннолетние) по правилам представительства.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-TRIP-06</td><td>Инструктор фиксирует факт прохождения и км; после этого засчитываются достижения/скидки.</td><td><span class="badge badge-must">Must</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.4. Регистрационная анкета</h3>
+        <p>Многошаговая форма: (1) контакт; (2) личные данные; (3) здоровье; (4) опыт; (5) контакты ЧС; (6) согласия.</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Группа</th><th>Поле</th><th>Тип / Валидация</th><th>Хранение</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>Идентификация</td><td>ФИО, дата рождения, пол</td><td>строка, дата; ФИО и дата обязательны</td><td>Профиль/участие</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>Контакты</td><td>Телефон, email</td><td>E.164, подтверждение email</td><td>Профиль</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>Документы</td><td>Серия/номер, кем/когда выдан</td><td>защищённые поля, маскирование</td><td>Участие</td><td><span class="badge badge-must">Must*</span></td></tr>
+              <tr><td>Адрес</td><td>Регион, город, адрес</td><td>структурированный / свободный</td><td>Участие</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>ЧС</td><td>ФИО, телефон, связь</td><td>обязательно для рисковых/многодневных</td><td>Участие</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>Медицинские</td><td>аллергии, ограничения, группа крови</td><td>текст / справочник</td><td>Ограниченный доступ</td><td><span class="badge badge-must">Must*</span></td></tr>
+              <tr><td>Опыт / Подготовка</td><td>категории, снаряжение, питание</td><td>чекбоксы, текст</td><td>Профиль/участие</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>Представитель</td><td>ФИО, основание, контакт</td><td>для несовершеннолетних</td><td>Участие</td><td><span class="badge badge-must">Must</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.5. Отзывы, Личный кабинет, Геймификация и Админка (4.5–4.7)</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>ID</th><th>Требование</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>FR-REV-01..03</td><td>Отзывы с оценкой 1–5, модерацией, меткой «прошёл маршрут» и ответом админа.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-CAB-01..02</td><td>ЛК: история, согласия, запросы на отзыв согласия/удаление данных.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-GAME-01..02</td><td>Раздельный зачёт км (пеший/водный), бейджи, ачивки, правила начисления.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-DISC-01..02</td><td>Расчёт и отображение скидок по правилам с ручной корректировкой.</td><td><span class="badge badge-should">Should</span></td></tr>
+              <tr><td>FR-IND-01..02</td><td>Форма заявки на индивидуальный тур и статусы ее обработки.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-NOT-01..02</td><td>Email/Push/SMS уведомления по статусам и событиям.</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>FR-ADM-01..02</td><td>CMS/Админка: управление маршрутами, заявками, версиями и аудитом.</td><td><span class="badge badge-must">Must</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. СОГЛАСИЯ И ПД -->
+      <div class="doc-section" id="sec-5">
+        <h2>5. Согласия и персональные данные</h2>
+        <h3>5.1. Общие требования</h3>
+        <p>Клуб фиксирует оператора ПД, цели, основание, состав, сроки и меры защиты. Запрещено объединять разные цели в один обязательный чекбокс. Чекбокс не предустановлен.</p>
+        
+        <h3>5.2. Шаблоны согласий</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Код</th><th>Текст чекбокса</th><th>Обяз.</th><th>Содержание</th></tr></thead>
+            <tbody>
+              <tr><td>C-01</td><td>Согласен на обработку ПД для заявки и участия</td><td>Да</td><td>Оператор, обычные ПД, цели, срок, отзыв.</td></tr>
+              <tr><td>C-02</td><td>Отдельное согласие на обработку сведений о здоровье</td><td>Да*</td><td>Специальные категории ПД, безопасность.</td></tr>
+              <tr><td>C-03</td><td>Согласен на фото- и видеосъёмку</td><td>Нет</td><td>Внутренняя отчётность и/или публичные каналы.</td></tr>
+              <tr><td>C-04</td><td>Согласен на обработку геолокации в фото/треке</td><td>Нет</td><td>Отображение на карте, механизм скрытия.</td></tr>
+              <tr><td>C-05</td><td>Согласен на передачу данных в МЧС / МКК</td><td>Да*</td><td>Адресаты, состав, безопасность/оформление.</td></tr>
+              <tr><td>C-06</td><td>Согласен на публикацию отзыва и имени/псевдонима</td><td>Нет</td><td>Каналы, отображаемое имя, отзыв публикации.</td></tr>
+              <tr><td>C-07</td><td>Согласен получать рекламные рассылки</td><td>Нет</td><td>Маркетинг, отписка.</td></tr>
+              <tr><td>C-08</td><td>Согласие законного представителя на ПД ребёнка</td><td>Да*</td><td>Данные представителя и ребёнка.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <h3>5.3. Жизненный цикл и аудит ПД</h3>
+        <ul>
+          <li>Разделение профильных, паспортных и медицинских данных. Инструктор видит только свой выход.</li>
+          <li>Поддержка запросов на удаление/исправление ПД. Логирование всех просмотров/экспортов.</li>
+        </ul>
+      </div>
+
+      <!-- 6. ВЫГРУЗКИ -->
+      <div class="doc-section" id="sec-6">
+        <h2>6. Выгрузки и печатные формы</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Шаблон</th><th>Получатель</th><th>Структура</th><th>Форматы</th><th>Приоритет</th></tr></thead>
+            <tbody>
+              <tr><td>EXP-MCHS-01</td><td>МЧС: группа</td><td>Реквизиты, маршрут, даты, руководитель, список, контакты, связь</td><td>XLSX, PDF, DOCX</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>EXP-MKK-01</td><td>МКК: материалы</td><td>Маршрут, категория, нитка, состав, опыт, допуски, точки</td><td>XLSX, PDF, DOCX</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>EXP-INT-01</td><td>Внутренний список</td><td>ФИО, контакты, статус, ЧС, питание, снаряжение</td><td>XLSX, PDF</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>EXP-INT-02</td><td>Реестр оплат</td><td>Заявка, участник, выход, цены, скидки, статусы</td><td>XLSX, CSV</td><td><span class="badge badge-must">Must</span></td></tr>
+              <tr><td>EXP-INT-03</td><td>Отчёт по согласиям</td><td>Участник, тип, версия согласия, статус, время</td><td>XLSX, PDF</td><td><span class="badge badge-should">Should</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 7. НЕФУНКЦИОНАЛЬНЫЕ ТРЕБОВАНИЯ -->
+      <div class="doc-section" id="sec-7">
+        <h2>7. Нефункциональные требования</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Область</th><th>Требование</th></tr></thead>
+            <tbody>
+              <tr><td>152-ФЗ / Защита ПД</td><td>Правовая и ИБ-оценка. Размещение и трансграничность — по закону.</td></tr>
+              <tr><td>Аутентификация</td><td>Email/Phone + пароль. MFA обязательна для админов.</td></tr>
+              <tr><td>Шифрование</td><td>TLS 1.2+ в транзите; шифрование чувствительных данных в БД (At-Rest).</td></tr>
+              <tr><td>Безопасность</td><td>OWASP Top 10, Rate Limiting, CSRF защита, проверка файлов антивирусом.</td></tr>
+              <tr><td>Производительность</td><td>P95 API ≤ 500 мс; первая отрисовка (FCP) ≤ 2.5 с.</td></tr>
+              <tr><td>Доступность & SLA</td><td>SLA ≥ 99,5% в месяц. Ежедневные бэкапы (RPO 24ч / RTO 8ч).</td></tr>
+              <tr><td>UX & Адаптивность</td><td>Адаптивность от 320px, WCAG 2.1 AA для публичных сценариев.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 8. МОДЕЛЬ ДАННЫХ -->
+      <div class="doc-section" id="sec-8">
+        <h2>8. Модель данных</h2>
+        <p><strong>Основные сущности:</strong> User, Role, Route, Track, RoutePoint, Media, Trip, Application, Participation, Consent, Review, ExportJob, Achievement, DiscountRule, Notification, AuditEvent.</p>
+        <p>Финансовые данные и токены платежей хранятся отдельно от анкет участников.</p>
+      </div>
+
+      <!-- 9. ИНТЕГРАЦИИ -->
+      <div class="doc-section" id="sec-9">
+        <h2>9. Интеграции</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Интеграция</th><th>Назначение</th></tr></thead>
+            <tbody>
+              <tr><td>Карты (Яндекс/2ГИС/OSM)</td><td>Базовая карта, геокодирование, отображение треков.</td></tr>
+              <tr><td>Геофайлы (GPX/KML)</td><td>Серверный парсинг, валидирование и нормализация координат.</td></tr>
+              <tr><td>Email / SMS / Push</td><td>Сервисные транзакционные уведомления (FCM/APNs/СМС-шлюзы).</td></tr>
+              <tr><td>Платежи / Хранилище</td><td>Эквайринг (опционально); S3-хранилище с подписанными URL.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 10. USER STORIES -->
+      <div class="doc-section" id="sec-10">
+        <h2>10. Пользовательские истории</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>ID</th><th>История</th><th>Критерий успеха</th></tr></thead>
+            <tbody>
+              <tr><td>US-01</td><td>Как гость, хочу отфильтровать водные походы на август...</td><td>Видит список, карту и свободные даты.</td></tr>
+              <tr><td>US-02</td><td>Как участник, хочу подать заявку и сохранить черновик...</td><td>Данные не теряются, форма валидируется.</td></tr>
+              <tr><td>US-03</td><td>Как участник, хочу управлять необязательными согласиями...</td><td>Отказ от рекламы не блокирует поход.</td></tr>
+              <tr><td>US-04</td><td>Как админ, хочу подтвердить состав группы...</td><td>Лимиты обновляются, уходят уведомления.</td></tr>
+              <tr><td>US-05</td><td>Как ответственный МЧС, хочу сформировать выгрузку...</td><td>Проверка полей, файл генерируется, логируется.</td></tr>
+              <tr><td>US-06</td><td>Как инструктор, хочу отметить завершивших поход...</td><td>Засчитываются километры и достижения.</td></tr>
+              <tr><td>US-07</td><td>Как участник, хочу видеть свои ачивки и скидку...</td><td>Прогресс виден в Личном кабинете.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 11. ЭКРАНЫ -->
+      <div class="doc-section" id="sec-11">
+        <h2>11. Экраны и навигация</h2>
+        <ul>
+          <li><strong>Сайт:</strong> Главная, Каталог, Карта, Карточка маршрута, Календарь, Отзывы, Инд. тур, О клубе, ЛК, Вход/Регистрация.</li>
+          <li><strong>Мобильное приложение:</strong> Нижнее меню: «Маршруты», «Карта», «Мои походы», «Профиль». Офлайн-просмотр.</li>
+          <li><strong>Админка:</strong> Дашборд, Управление треками, Выходы, Заявки, Экспорт МЧС/МКК, Аудит, Справочники.</li>
+        </ul>
+      </div>
+
+      <!-- 12. API -->
+      <div class="doc-section" id="sec-12">
+        <h2>12. API</h2>
+        <p>REST JSON (`/api/v1`), Авторизация через Bearer JWT Token.</p>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Метод & Endpoint</th><th>Назначение</th><th>Доступ</th></tr></thead>
+            <tbody>
+              <tr><td><span class="method method-get">GET</span> `/routes`</td><td>Каталог и фильтры</td><td>Все</td></tr>
+              <tr><td><span class="method method-get">GET</span> `/routes/{id}/track`</td><td>Публичная геометрия трека</td><td>Все</td></tr>
+              <tr><td><span class="method method-post">POST</span> `/applications`</td><td>Создать заявку/черновик</td><td>Участник</td></tr>
+              <tr><td><span class="method method-post">POST</span> `/consents`</td><td>Фиксация согласия</td><td>Участник</td></tr>
+              <tr><td><span class="method method-post">POST</span> `/admin/exports`</td><td>Запустить генерацию отчёта</td><td>Админ / МЧС</td></tr>
+              <tr><td><span class="method method-patch">PATCH</span> `/applications/{id}`</td><td>Обновить данные заявки</td><td>Владелец / Админ</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Пример запроса создания заявки:</h3>
+<pre><code>POST /api/v1/applications
+{
+  "tripId": "trip_123",
+  "participant": { 
+    "firstName": "Иван", 
+    "lastName": "Иванов", 
+    "birthDate": "1990-01-01" 
+  },
+  "emergencyContact": { 
+    "name": "Пётр Иванов", 
+    "phone": "+79990000000" 
+  },
+  "consentIds": ["consent_c01_v3"]
+}</code></pre>
+      </div>
+
+      <!-- 13. ЭТАПЫ И MVP -->
+      <div class="doc-section" id="sec-13">
+        <h2>13. Этапы и MVP</h2>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Этап</th><th>Состав</th><th>Результат</th></tr></thead>
+            <tbody>
+              <tr><td>0. Discovery</td><td>Интервью, форматы МЧС/МКК, юр. модель ПД, архитектура.</td><td>Backlog, UX прототипы, ТЗ.</td></tr>
+              <tr><td>MVP</td><td>Сайт, каталог, карта, заявка, базовые согласия, списки МЧС/МКК, админка.</td><td>Рабочий запуск записи в походы.</td></tr>
+              <tr><td>Версия 2</td><td>Мобильные приложения, отзывы, фото с гео, push, инд. туры.</td><td>Омниканальность.</td></tr>
+              <tr><td>Опции</td><td>Ачивки, скидки, онлайн-оплата, офлайн-карты.</td><td>Внедрение по ценности.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 14. ПРИЁМКА -->
+      <div class="doc-section" id="sec-14">
+        <h2>14. Критерии приёмки</h2>
+        <ul>
+          <li><strong>Каталог/Карта:</strong> Корректный импорт GPX и работа всех фильтров.</li>
+          <li><strong>Анкета и Согласия:</strong> Автосохранение черновиков, отсутствие чекбоксов по умолчанию, логирование версий.</li>
+          <li><strong>Безопасность и Выгрузки:</strong> Тесты доступа (RBAC), шифрование, корректность XLSX/PDF для МЧС.</li>
+        </ul>
+      </div>
+
+      <!-- 15. РИСКИ -->
+      <div class="doc-section" id="sec-15">
+        <h2>15. Риски, допущения и открытые вопросы</h2>
+        <h3>15.1. Риски и меры</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Риск</th><th>Влияние</th><th>Мера снижения</th></tr></thead>
+            <tbody>
+              <tr><td>Избыточный сбор ПД</td><td>Высокое</td><td>Минимизация данных (Data minimization), разделение полей.</td></tr>
+              <tr><td>Разные формы МЧС по регионам</td><td>Среднее</td><td>Гибкие версионируемые шаблоны экспорта.</td></tr>
+              <tr><td>Утечка фото/документов</td><td>Высокое</td><td>Приватное S3 хранилище, шифрование, короткоживущие ссылки.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>15.2. Открытые вопросы до начала разработки</h3>
+        <ol>
+          <li>Точные формы и каналы передачи данных для конкретных региональных подразделений МЧС/МКК.</li>
+          <li>Перечень маршрутов, строго требующих паспортные/медицинские данные.</li>
+          <li>Правила подтверждения полномочий законных представителей для несовершеннолетних.</li>
+          <li>Выбор конкретных провайдеров карт, SMS и хостинга под бюджет Заказчика.</li>
+        </ol>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- JS ЛОГИКА -->
+  <script>
+    const sections = [
+      { id: 'sec-0', title: '0. О документе' },
+      { id: 'sec-1', title: '1. Термины и сокращения' },
+      { id: 'sec-2', title: '2. Цели и границы' },
+      { id: 'sec-3', title: '3. Роли и доступ' },
+      { id: 'sec-4', title: '4. Функциональные треб.' },
+      { id: 'sec-5', title: '5. Согласия и ПД' },
+      { id: 'sec-6', title: '6. Выгрузки (МЧС/МКК)' },
+      { id: 'sec-7', title: '7. Нефункциональные треб.' },
+      { id: 'sec-8', title: '8. Модель данных' },
+      { id: 'sec-9', title: '9. Интеграции' },
+      { id: 'sec-10', title: '10. User Stories' },
+      { id: 'sec-11', title: '11. Экраны и навигация' },
+      { id: 'sec-12', title: '12. API' },
+      { id: 'sec-13', title: '13. Этапы и MVP' },
+      { id: 'sec-14', title: '14. Критерии приёмки' },
+      { id: 'sec-15', title: '15. Риски и вопросы' }
+    ];
+
+    const navList = document.getElementById('navList');
+    const appContainer = document.getElementById('appContainer');
+    const themeToggle = document.getElementById('themeToggle');
+    const btnModeTabs = document.getElementById('btnModeTabs');
+    const btnModeFull = document.getElementById('btnModeFull');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('sidebar');
+
+    let currentMode = 'tabs';
+
+    function initMenu() {
+      navList.innerHTML = '';
+      sections.forEach((sec, index) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.className = `nav-item ${index === 0 ? 'active' : ''}`;
+        a.textContent = sec.title;
+        a.dataset.target = sec.id;
+        a.onclick = (e) => handleNavClick(e, sec.id);
+        li.appendChild(a);
+        navList.appendChild(li);
+      });
+    }
+
+    function handleNavClick(e, targetId) {
+      e.preventDefault();
+      
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      e.target.classList.add('active');
+
+      if (currentMode === 'tabs') {
+        document.querySelectorAll('.doc-section').forEach(sec => sec.classList.remove('visible'));
+        document.getElementById(targetId).classList.add('visible');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const targetEl = document.getElementById(targetId);
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      sidebar.classList.remove('open');
+    }
+
+    btnModeTabs.onclick = () => {
+      currentMode = 'tabs';
+      btnModeTabs.classList.add('btn-active');
+      btnModeFull.classList.remove('btn-active');
+      appContainer.classList.remove('mode-full');
+      
+      const activeNav = document.querySelector('.nav-item.active');
+      const activeId = activeNav ? activeNav.dataset.target : 'sec-0';
+      document.querySelectorAll('.doc-section').forEach(sec => sec.classList.remove('visible'));
+      document.getElementById(activeId).classList.add('visible');
+    };
+
+    btnModeFull.onclick = () => {
+      currentMode = 'full';
+      btnModeFull.classList.add('btn-active');
+      btnModeTabs.classList.remove('btn-active');
+      appContainer.classList.add('mode-full');
+    };
+
+    themeToggle.onclick = () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      themeToggle.textContent = newTheme === 'light' ? '🌙' : '☀️';
+      localStorage.setItem('theme', newTheme);
+    };
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+
+    mobileMenuBtn.onclick = () => sidebar.classList.toggle('open');
+
+    document.getElementById('searchInput').oninput = (e) => {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(query) ? 'block' : 'none';
+      });
+    };
+
+    initMenu();
+  </script>
+</body>
+</html>
